@@ -18,9 +18,13 @@ import { Save } from 'lucide-react';
 import { EditorSettings, NoteMetadata } from '../../lib/types';
 import { extractNoteMetadata } from '../../lib/noteMeta';
 import { useGrid } from '../../hooks/useGrid';
+import { useHeaderDrawer } from '../../hooks/useHeaderDrawer';
 import InlineAiChat, { InlineContext } from './InlineAiChat';
 import GridLayer from './GridLayer';
+import { HeaderDrawer } from './HeaderDrawer';
+import { GutterLayout } from './Gutter';
 import { runAiRoleChat, type ChatTurn } from '../../lib/ai';
+import type { Annotation } from '../../annotations/types';
 
 interface EditorContextMenu {
   x: number;
@@ -78,6 +82,7 @@ const ForgeEditor = ({
   const [buildStory, setBuildStory] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [showInlineChat, setShowInlineChat] = useState(false);
+  const [annotations] = useState<Annotation[]>([]);
   const inlineAiAbortRef = useRef<AbortController | null>(null);
 
   const editor = useEditor({
@@ -126,6 +131,9 @@ const ForgeEditor = ({
 
   // Grid Layer — addressable substrate under the editor
   const grid = useGrid(editor, filePath);
+
+  // Header Drawer — metadata drawers behind headers + gutter state
+  const drawerHook = useHeaderDrawer(editor, grid, filePath);
 
   useEffect(() => {
     if (!filePath || !editor) return;
@@ -299,10 +307,23 @@ const ForgeEditor = ({
           if (from !== to) setShowInlineChat(true);
         }
       }
+      // Gutter toggles (Ctrl+Shift+G cycles, Ctrl+[ left, Ctrl+] right)
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'g') {
+        event.preventDefault();
+        drawerHook.cycleGutter();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === '[') {
+        event.preventDefault();
+        drawerHook.toggleLeft();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === ']') {
+        event.preventDefault();
+        drawerHook.toggleRight();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [getSelectionText, saveCurrentFile, editor]);
+  }, [getSelectionText, saveCurrentFile, editor, drawerHook]);
 
   const handleInlineExecute = useCallback(async (instruction: string, ctx: InlineContext) => {
     if (inlineAiAbortRef.current) {
@@ -406,44 +427,71 @@ const ForgeEditor = ({
         </div>
       </div>
 
-      <EditorToolbar editor={editor} />
+      <EditorToolbar
+        editor={editor}
+        drawerHook={drawerHook}
+      />
 
       <div className={`flex-1 flex overflow-hidden ${showGrid ? '' : 'flex-col'}`}>
-        {/* Editor pane */}
-        <div
-          className={`${showGrid ? 'w-1/2 border-r border-forge-steel' : 'flex-1'} overflow-y-auto`}
-          onContextMenu={(event) => {
-            if (!editor) return;
-            const selectedText = getSelectionText();
-            setContextMenu({
-              x: event.clientX,
-              y: event.clientY,
-              selectedText,
-            });
-            event.preventDefault();
-          }}
-        >
-          <div
-            className={`mx-auto py-8 px-6 relative ${editorSettings.showLineNumbers ? 'forge-editor-lines' : ''}`}
-            style={{
-              maxWidth: `${editorSettings.editorMaxWidth}px`,
-              ['--forge-editor-font-family' as string]: editorSettings.editorFontFamily,
-              ['--forge-editor-font-size' as string]: `${editorSettings.editorFontSize}px`,
-              ['--forge-editor-line-height' as string]: String(editorSettings.editorLineHeight),
-              ['--forge-tab-size' as string]: String(editorSettings.tabSize),
-            }}
+        {/* Editor pane with gutter layout */}
+        <div className={`${showGrid ? 'w-1/2 border-r border-forge-steel' : 'flex-1'} flex flex-col overflow-hidden`}>
+          <GutterLayout
+            drawerHook={drawerHook}
+            annotations={annotations}
           >
-            <EditorContent editor={editor} />
-            {/* Inline AI Chat bubble */}
-            {showInlineChat && (
-              <InlineAiChat
-                editor={editor}
-                grid={grid}
-                onClose={() => setShowInlineChat(false)}
-                onExecute={handleInlineExecute}
-              />
-            )}
-          </div>
+            <div
+              className="flex-1 overflow-y-auto"
+              onContextMenu={(event) => {
+                if (!editor) return;
+                const selectedText = getSelectionText();
+                setContextMenu({
+                  x: event.clientX,
+                  y: event.clientY,
+                  selectedText,
+                });
+                event.preventDefault();
+              }}
+            >
+              <div
+                className={`mx-auto py-8 px-6 relative ${editorSettings.showLineNumbers ? 'forge-editor-lines' : ''}`}
+                style={{
+                  maxWidth: `${editorSettings.editorMaxWidth}px`,
+                  ['--forge-editor-font-family' as string]: editorSettings.editorFontFamily,
+                  ['--forge-editor-font-size' as string]: `${editorSettings.editorFontSize}px`,
+                  ['--forge-editor-line-height' as string]: String(editorSettings.editorLineHeight),
+                  ['--forge-tab-size' as string]: String(editorSettings.tabSize),
+                }}
+              >
+                {/* Header Drawers — rendered inline with content */}
+                {drawerHook.getSections().map(section => {
+                  const isOpen = section.drawerOpen || drawerHook.isExpandAll;
+                  const resolvedSlots = drawerHook.getResolvedSlots(section.sectionId);
+                  return (
+                    <HeaderDrawer
+                      key={section.sectionId}
+                      section={section}
+                      slotDefinitions={drawerHook.slotDefinitions}
+                      resolvedSlots={resolvedSlots}
+                      isOpen={isOpen}
+                      onToggle={() => drawerHook.toggle(section.sectionId)}
+                      onClose={() => drawerHook.closeDrawer(section.sectionId)}
+                      onSlotChange={(slotIndex, value) => drawerHook.setSlotValue(section.sectionId, slotIndex, value)}
+                    />
+                  );
+                })}
+                <EditorContent editor={editor} />
+                {/* Inline AI Chat bubble */}
+                {showInlineChat && (
+                  <InlineAiChat
+                    editor={editor}
+                    grid={grid}
+                    onClose={() => setShowInlineChat(false)}
+                    onExecute={handleInlineExecute}
+                  />
+                )}
+              </div>
+            </div>
+          </GutterLayout>
         </div>
 
         {/* Grid Layer panel (Layer 2) */}

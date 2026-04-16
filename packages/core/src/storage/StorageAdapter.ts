@@ -1,5 +1,7 @@
 // Import the Annotation types from annotations module
 import type { Annotation, LayerConfig, ImportResult } from '../annotations/types';
+import type { SectionMeta, SlotValue, HeaderDrawerState } from '../lib/headerDrawer';
+import type { ForgeTemplate } from '../lib/templates';
 
 export interface FileEntry {
   name: string;
@@ -29,4 +31,14 @@ export interface StorageAdapter {
 
   // Data import
   importData(source: string, format: 'csv' | 'json' | 'xlsx', layerId: string): Promise<ImportResult>;
+
+  // Header Drawer — section metadata
+  saveDrawerState(documentId: string, state: HeaderDrawerState): Promise<void>;
+  loadDrawerState(documentId: string): Promise<Partial<HeaderDrawerState> | null>;
+  upsertSlotValue(sectionId: string, slotIndex: number, value: SlotValue): Promise<void>;
+  getInheritedValues(sectionId: string): Promise<SlotValue[]>;
+
+  // Templates
+  listTemplates(): Promise<ForgeTemplate[]>;
+  getTemplate(templateId: string): Promise<ForgeTemplate | null>;
 }

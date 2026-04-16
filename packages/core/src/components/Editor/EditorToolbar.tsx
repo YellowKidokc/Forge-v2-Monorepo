@@ -4,12 +4,15 @@ import {
   Bold, Italic, Code, Heading1, Heading2, Heading3,
   List, Quote, Zap, Undo2, Redo2,
   Underline as UnderlineIcon, Strikethrough, CheckSquare, Table as TableIcon,
-  Trash2, Columns, Rows
+  Trash2, Columns, Rows,
+  PanelLeftClose, PanelRightClose, ChevronsDownUp
 } from 'lucide-react';
 import { generateBlockId } from '../../lib/markdown';
+import type { UseHeaderDrawerReturn } from '../../hooks/useHeaderDrawer';
 
 interface EditorToolbarProps {
   editor: Editor | null;
+  drawerHook?: UseHeaderDrawerReturn;
 }
 
 const ToolbarButton: React.FC<{
@@ -29,8 +32,11 @@ const ToolbarButton: React.FC<{
   </button>
 );
 
-const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
+const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, drawerHook }) => {
   if (!editor) return null;
+
+  const showLeft = drawerHook && (drawerHook.gutterState === 'full' || drawerHook.gutterState === 'left');
+  const showRight = drawerHook && (drawerHook.gutterState === 'full' || drawerHook.gutterState === 'right');
 
   const promoteBlock = () => {
     if (editor.isActive('promotedBlock')) {
@@ -85,6 +91,39 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         )}
       </div>
       <div className="flex-1" />
+      {/* Gutter & Drawer controls */}
+      {drawerHook && (
+        <>
+          <div className="w-px h-4 bg-gray-800 mx-1" />
+          <div className="flex items-center gap-px">
+            <ToolbarButton
+              onClick={() => drawerHook.toggleLeft()}
+              active={!!showLeft}
+              title="Toggle left gutter (Ctrl+[)"
+            >
+              <PanelLeftClose size={12} />
+              <span className="text-[9px] ml-0.5">Left</span>
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => drawerHook.toggleRight()}
+              active={!!showRight}
+              title="Toggle right gutter (Ctrl+])"
+            >
+              <PanelRightClose size={12} />
+              <span className="text-[9px] ml-0.5">Right</span>
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => drawerHook.expandAll()}
+              active={drawerHook.isExpandAll}
+              title="Expand all header drawers"
+            >
+              <ChevronsDownUp size={12} />
+              <span className="text-[9px] ml-0.5">Expand All</span>
+            </ToolbarButton>
+          </div>
+        </>
+      )}
+      <div className="w-px h-4 bg-gray-800 mx-1" />
       <ToolbarButton onClick={promoteBlock} active={editor.isActive('promotedBlock')} title="Promote"><Zap size={14} /><span className="text-[10px] font-bold ml-1">PROMOTE</span></ToolbarButton>
     </div>
   );
