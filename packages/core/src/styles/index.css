@@ -738,6 +738,88 @@ body {
   background: rgba(255, 50, 50, 0.25);
 }
 
+/* ============================================
+   Header Drawer
+   ============================================ */
+.header-drawer-container {
+  position: relative;
+  margin: 0;
+}
+
+.header-drawer-chevron {
+  margin-left: 0.5rem;
+}
+
+.header-drawer-body {
+  transition: max-height 200ms ease-out, opacity 200ms ease-out;
+}
+
+.header-drawer-open {
+  animation: drawer-bloom 200ms ease-out;
+}
+
+.header-drawer-closed {
+  transition: max-height 150ms ease-in, opacity 150ms ease-in;
+}
+
+@keyframes drawer-bloom {
+  from {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   Gutter Layout
+   ============================================ */
+.gutter-layout {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gutter-left-container,
+.gutter-right-container {
+  transition: width 150ms ease-in-out;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.gutter-prose {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.left-gutter,
+.right-gutter {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.left-gutter-section:hover {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.right-gutter-annotation:hover {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+/* Line clamp utility */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Toggle button (right edge when panel is closed) */
 .ai-panel-toggle {
   position: fixed;
