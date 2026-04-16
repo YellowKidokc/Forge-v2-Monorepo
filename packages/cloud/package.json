@@ -1,0 +1,16 @@
+{
+  "name": "@forge/cloud",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@forge/core": "workspace:*"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

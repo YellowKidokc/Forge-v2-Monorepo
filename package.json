@@ -1,0 +1,16 @@
+{
+  "name": "forge-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "packages/core",
+    "packages/desktop",
+    "packages/cloud"
+  ],
+  "scripts": {
+    "dev:desktop": "npm run dev -w packages/desktop",
+    "build:desktop": "npm run build -w packages/desktop",
+    "dev:cloud": "npm run dev -w packages/cloud",
+    "build:cloud": "npm run build -w packages/cloud"
+  }
+}

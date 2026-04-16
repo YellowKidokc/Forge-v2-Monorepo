@@ -1,0 +1,70 @@
+/* Annotation marker styles */
+.forge-annotation {
+  cursor: pointer;
+  position: relative;
+  transition: opacity 0.15s ease;
+}
+
+/* Chevron style: > < at line edges */
+.forge-marker-chevron::before {
+  content: '\203A';
+  font-size: 0.7em;
+  vertical-align: super;
+  opacity: var(--forge-marker-opacity, 0.7);
+  color: var(--forge-marker-color, #f59e0b);
+  margin-right: 1px;
+  font-weight: bold;
+}
+
+/* Superscript style: small letter/number */
+.forge-marker-superscript::after {
+  content: attr(data-annotation-id);
+  font-size: 0.6em;
+  vertical-align: super;
+  opacity: var(--forge-marker-opacity, 0.7);
+  color: var(--forge-marker-color, #3b82f6);
+  margin-left: 1px;
+}
+
+/* Dot style: subtle dot */
+.forge-marker-dot::after {
+  content: '\2022';
+  font-size: 0.5em;
+  vertical-align: super;
+  opacity: var(--forge-marker-opacity, 0.7);
+  color: var(--forge-marker-color, #8b5cf6);
+  margin-left: 2px;
+}
+
+/* Faint highlight style */
+.forge-marker-faint {
+  background-color: color-mix(in srgb, var(--forge-marker-color, #8b5cf6) 10%, transparent);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* Underline style */
+.forge-marker-underline {
+  border-bottom: 1px dotted var(--forge-marker-color, #10b981);
+  opacity: var(--forge-marker-opacity, 0.7);
+}
+
+/* Hidden: no visual indicator */
+.forge-marker-none {
+  /* no visual, but still clickable */
+}
+
+/* Hover reveals all markers more strongly */
+.forge-annotation:hover {
+  opacity: 1 !important;
+}
+
+/* Annotation panel transition */
+.forge-annotation-panel {
+  animation: forge-panel-expand 0.15s ease-out;
+}
+
+@keyframes forge-panel-expand {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 2000px; }
+}
