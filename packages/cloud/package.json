@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "wrangler dev",
     "build": "wrangler deploy --dry-run",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "rust:build": "cargo build --manifest-path Cargo.toml",
+    "rust:run": "cargo run --manifest-path Cargo.toml"
   },
   "dependencies": {
     "@forge/core": "workspace:*"
